@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  api:
+    build: ./services/api
+    env_file: ./.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./services/api:/app
+    environment:
+      - PYTHONPATH=/app
+      - TZ=Asia/Tokyo
+
+  worker:
+    build: ./services/api
+    command: celery -A app.workers.celery_app.celery worker --loglevel=info --concurrency=2
+    env_file: ./.env
+    depends_on:
+      - api
+      - db
+      - redis
+    volumes:
+      - ./services/api:/app
+    environment:
+      - PYTHONPATH=/app
+      - TZ=Asia/Tokyo
+
+  beat:
+    build: ./services/api
+    command: celery -A app.workers.celery_app.celery beat --loglevel=info
+    env_file: ./.env
+    depends_on:
+      - worker
+    volumes:
+      - ./services/api:/app
+    environment:
+      - PYTHONPATH=/app
+      - TZ=Asia/Tokyo
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: writer
+      POSTGRES_USER: postgres
+      TZ: Asia/Tokyo
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  db_data:
+  redis_data:

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記事プレビュー - {{ article.title }}</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-generated {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .status-generating {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .status-failed {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .meta-info {
+            background: #ecf0f1;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .meta-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .meta-value {
+            color: #666;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .article-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .article-excerpt {
+            font-size: 1.1rem;
+            color: #555;
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .article-body h2 {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin: 30px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .article-body h3 {
+            font-size: 1.2rem;
+            color: #34495e;
+            margin: 25px 0 12px 0;
+        }
+
+        .article-body p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .article-body ul, .article-body ol {
+            margin: 15px 0 15px 25px;
+        }
+
+        .article-body li {
+            margin-bottom: 8px;
+        }
+
+        .article-body blockquote {
+            background: #f8f9fa;
+            border-left: 4px solid #95a5a6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+        .article-body code {
+            background: #f1f2f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+        }
+
+        .article-body pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .article-body a {
+            color: #3498db;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .article-body a:hover {
+            border-bottom-color: #3498db;
+        }
+
+        .tags-section {
+            margin: 30px 0 20px 0;
+            padding: 15px 0;
+            border-top: 1px solid #eee;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin: 2px 5px 2px 0;
+        }
+
+        .categories-section {
+            margin: 15px 0;
+        }
+
+        .category {
+            display: inline-block;
+            background: #95a5a6;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            margin: 2px 5px 2px 0;
+        }
+
+        .faq-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            background: #34495e;
+            color: white;
+            padding: 12px 15px;
+            font-weight: bold;
+        }
+
+        .faq-answer {
+            padding: 15px;
+        }
+
+        .actions {
+            background: #ecf0f1;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .char-counter {
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .char-counter.valid {
+            background: #27ae60;
+        }
+
+        .char-counter.warning {
+            background: #f39c12;
+        }
+
+        .char-counter.error {
+            background: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .article-title {
+                font-size: 1.5rem;
+            }
+
+            .meta-row {
+                flex-direction: column;
+                margin-bottom: 10px;
+            }
+
+            .meta-label {
+                margin-bottom: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 記事プレビュー</h1>
+            <span class="status-badge status-{{ article.status }}">{{ article.status.upper() }}</span>
+        </div>
+
+        {% if article.char_count %}
+        <div class="char-counter {% if 9000 <= article.char_count <= 11000 %}valid{% elif article.char_count < 9000 %}error{% else %}warning{% endif %}">
+            文字数: {{ "{:,}".format(article.char_count) }}字
+            {% if 9000 <= article.char_count <= 11000 %}
+                ✅ 目標範囲内
+            {% elif article.char_count < 9000 %}
+                ⚠️ 文字数不足
+            {% else %}
+                ⚠️ 文字数超過
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="meta-info">
+            <div class="meta-row">
+                <span class="meta-label">記事ID:</span>
+                <span class="meta-value">{{ article.article_id }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="meta-label">ステータス:</span>
+                <span class="meta-value">{{ article.status }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="meta-label">作成日時:</span>
+                <span class="meta-value">{{ article.created_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
+            </div>
+            <div class="meta-row">
+                <span class="meta-label">更新日時:</span>
+                <span class="meta-value">{{ article.updated_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
+            </div>
+            {% if article.wp_post_id %}
+            <div class="meta-row">
+                <span class="meta-label">WordPress投稿ID:</span>
+                <span class="meta-value">{{ article.wp_post_id }}</span>
+            </div>
+            {% endif %}
+            {% if article.wp_url %}
+            <div class="meta-row">
+                <span class="meta-label">WordPress URL:</span>
+                <span class="meta-value"><a href="{{ article.wp_url }}" target="_blank">{{ article.wp_url }}</a></span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if article.output %}
+        <div class="content">
+            <h1 class="article-title">{{ article.output.title }}</h1>
+
+            {% if article.output.excerpt %}
+            <div class="article-excerpt">
+                {{ article.output.excerpt }}
+            </div>
+            {% endif %}
+
+            {% if article.output.meta_description %}
+            <div class="meta-row">
+                <span class="meta-label">メタディスクリプション:</span>
+                <span class="meta-value">{{ article.output.meta_description }}</span>
+            </div>
+            {% endif %}
+
+            {% if article.output.categories %}
+            <div class="categories-section">
+                <strong>カテゴリ:</strong>
+                {% for category in article.output.categories %}
+                    <span class="category">{{ category }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if article.output.tags %}
+            <div class="tags-section">
+                <strong>タグ:</strong>
+                {% for tag in article.output.tags %}
+                    <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="article-body">
+                {{ article.output.body_html | safe }}
+            </div>
+
+            {% if article.output.faq %}
+            <div class="faq-section">
+                <h2>よくある質問</h2>
+                {% for faq_item in article.output.faq %}
+                <div class="faq-item">
+                    <div class="faq-question">{{ faq_item.question }}</div>
+                    <div class="faq-answer">{{ faq_item.answer_html | safe }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if article.output.cta_html %}
+            <div class="cta-section">
+                {{ article.output.cta_html | safe }}
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="content">
+            <div style="text-align: center; padding: 40px; color: #666;">
+                {% if article.status == 'generating' %}
+                    <h2>📝 記事を生成中...</h2>
+                    <p>しばらくお待ちください。生成には数分かかる場合があります。</p>
+                {% elif article.status == 'failed' %}
+                    <h2>❌ 記事生成に失敗しました</h2>
+                    <p>再生成をお試しください。</p>
+                {% else %}
+                    <h2>⏳ 記事がまだ生成されていません</h2>
+                    <p>記事の内容はここに表示されます。</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="actions">
+            {% if article.status == 'generated' and article.output and not article.wp_post_id %}
+                <a href="/api/articles/{{ article.article_id }}/publish" class="btn btn-success" onclick="return publishArticle('publish')">
+                    📤 すぐに公開
+                </a>
+                <a href="#" class="btn btn-primary" onclick="return publishArticle('draft')">
+                    📝 下書きとして保存
+                </a>
+                <a href="#" class="btn btn-warning" onclick="return schedulePublish()">
+                    ⏰ 予約投稿
+                </a>
+            {% endif %}
+
+            {% if article.status in ['generated', 'failed'] %}
+                <a href="/api/articles/{{ article.article_id }}/regenerate" class="btn btn-warning" onclick="return confirm('記事を再生成しますか？')">
+                    🔄 再生成
+                </a>
+            {% endif %}
+
+            <a href="/api/articles/{{ article.article_id }}" class="btn btn-primary" onclick="location.reload(); return false;">
+                🔄 更新
+            </a>
+
+            {% if article.wp_url %}
+                <a href="{{ article.wp_url }}" target="_blank" class="btn btn-success">
+                    🌐 WordPressで表示
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function publishArticle(mode) {
+            if (!confirm(`記事を${mode === 'publish' ? '公開' : '下書き保存'}しますか？`)) {
+                return false;
+            }
+
+            fetch(`/api/articles/{{ article.article_id }}/publish`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mode: mode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wp_post_id) {
+                    alert(`WordPress投稿が完了しました！\n投稿ID: ${data.wp_post_id}`);
+                    location.reload();
+                } else {
+                    alert('投稿処理を開始しました。しばらくしてから更新してください。');
+                }
+            })
+            .catch(error => {
+                alert('投稿に失敗しました: ' + error.message);
+            });
+
+            return false;
+        }
+
+        function schedulePublish() {
+            const datetime = prompt('投稿日時を入力してください (例: 2024-12-25T10:00:00):');
+            if (!datetime) return false;
+
+            if (!confirm(`${datetime} に投稿予約しますか？`)) {
+                return false;
+            }
+
+            fetch(`/api/articles/{{ article.article_id }}/publish`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mode: 'schedule',
+                    schedule_at: datetime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wp_post_id) {
+                    alert(`予約投稿が完了しました！\n投稿ID: ${data.wp_post_id}\n投稿日時: ${datetime}`);
+                    location.reload();
+                } else {
+                    alert('予約投稿処理を開始しました。しばらくしてから更新してください。');
+                }
+            })
+            .catch(error => {
+                alert('予約投稿に失敗しました: ' + error.message);
+            });
+
+            return false;
+        }
+
+        // Auto-refresh for generating articles
+        {% if article.status == 'generating' %}
+        setTimeout(function() {
+            location.reload();
+        }, 30000); // Refresh every 30 seconds
+        {% endif %}
+    </script>
+</body>
+</html>
